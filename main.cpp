@@ -1,42 +1,44 @@
 #include <iostream>
 #include <ctype.h>
 #include <stdlib.h>
+#include <string>
 
 struct polynomialPart{
-	int coefficient;
-	int power;
-	int parse(std::string polyString) {
-
-		std::string::iterator it = polyString.begin();
+	int coefficient = 1;
+	int power = 1;
+	std::string toString() {
+	  return std::to_string(coefficient) + "*x^" + std::to_string(power) + '\n';
+	}
+	std::string::iterator parse(std::string::iterator it) {		
 		// parsing coefficient
 		std::string coefString;
-		int coef;
-		while(isdigit(*it) || *it == '-') {
+		while(isdigit(*it) || (*it == '-') || (*it == '+')) {		
 		  coefString += *it;
 		  it++;
+		}			
+		coefficient = atoi(coefString.c_str());
+		if(!coefficient) {
+		    coefficient = 1;
 		}
-		coef = atoi(coefString.c_str());
-		std::cout << coef << std::endl;
-
-		if( *it != '*' || *(++it) != 'x') {
-		  std::cout << "Error!";
-		  return -1;
-		}
-
-		it++;
-
+		
+		if( *it == '*') it++;
+		if( *it == 'x') it++;
+		if( *it == '^') { 
 		// parsing power
-		if(*it == '^') {
-		  it++;
-		  std::string powerStr;
-		  int power;
-		  while(isdigit(*it) || *it == '-'){
-		    powerStr = powerStr + *it;
-		    it++;
-		  }
-		  power = atoi(powerStr.c_str());
-		  std::cout << power;
+			it++;
+			std::string powerStr;
+			power;
+			while(isdigit(*it)) {
+			powerStr = powerStr + *it;
+			it++; }
+			power = atoi(powerStr.c_str());
 		}
+		else {
+			power = 1;
+			return it;
+		}		
+		
+		return it;
 	}
 };
 
@@ -49,9 +51,14 @@ std::string derivative (std::string polynomial){
 
 
 int main (){
-	std::string test1 = "-1*x^23+x";
-	//std::cout << derivative(test1);
+	std::string test1 = "-15*x^23+x+12*x^2";	
 	polynomialPart p;
-	p.parse(test1);
+	std::string::iterator it = test1.begin();
+	while(it != test1.end()){
+		it = p.parse(it);
+		std::cout << p.toString();	
+	}
+	
+	
 	return 0;
 }
