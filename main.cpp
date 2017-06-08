@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string>
+#include <set>
 
 struct polynomialPart{
 	int coefficient = 1;
@@ -52,11 +53,15 @@ std::string derivative (std::string polynomial){
 
 int main (){
 	std::string test1 = "-15*x^23+x+12*x^2";	
-	polynomialPart p;
+	
 	std::string::iterator it = test1.begin();
+	std::set <int, polynomialPart> polynomial;
+	
 	while(it != test1.end()){
+		polynomialPart p;
 		it = p.parse(it);
 		std::cout << p.toString();	
+		
 	}
 	
 	
