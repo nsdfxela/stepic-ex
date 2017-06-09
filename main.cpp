@@ -7,9 +7,22 @@
 struct polynomialPart{
 	int coefficient = 1;
 	int power = 1;
+	
 	std::string toString() {
 	  return std::to_string(coefficient) + "*x^" + std::to_string(power) + '\n';
 	}
+	
+	void derivative() {
+		coefficient *= power;
+		power--;
+	}
+	
+	void add(const polynomialPart &p){
+		if(p.power == power){
+			coefficient +=p.coefficient;
+		}
+	}
+	
 	std::string::iterator parse(std::string::iterator it) {		
 		// parsing coefficient
 		std::string coefString;
@@ -52,7 +65,7 @@ std::string derivative (std::string polynomial){
 
 
 int main (){
-	std::string test1 = "-15*x^23+x+12*x^2";	
+	std::string test1 = "-15*x^23+x+12*x^2+16*x^23";	
 	
 	std::string::iterator it = test1.begin();
 	std::map <int, polynomialPart> polynomial;
@@ -60,8 +73,19 @@ int main (){
 	while(it != test1.end()){
 		polynomialPart p;
 		it = p.parse(it);
+		//p.derivative();		
+		auto existingPart = polynomial.find(p.power);
+		if(existingPart !=  polynomial.end()){
+			existingPart->second.add(p);
+		} else {
+			polynomial[p.power] = p;
+		}
 		std::cout << p.toString();	
 		
+	}
+	printf("Polynomial: \n");
+	for(auto &x : polynomial){
+		std::cout << x.second.toString();
 	}
 	
 	
