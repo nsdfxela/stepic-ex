@@ -2,7 +2,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string>
-#include <set>
+#include <map>
 
 struct polynomialPart{
 	int coefficient = 1;
@@ -55,7 +55,7 @@ int main (){
 	std::string test1 = "-15*x^23+x+12*x^2";	
 	
 	std::string::iterator it = test1.begin();
-	std::set <int, polynomialPart> polynomial;
+	std::map <int, polynomialPart> polynomial;
 	
 	while(it != test1.end()){
 		polynomialPart p;
