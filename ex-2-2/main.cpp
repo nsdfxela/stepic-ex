@@ -3,13 +3,14 @@
 class StringPointer {
 
 public:
-	StringPointer(std::string *p):pointer(p){
-				
+	StringPointer(std::string *p) {
+		if(p){
+			pointer = p;			
+		} else {
+			pointer = new std::string();
+			_needsCleanup = true;
+		}
 	}
-	
-	/*std::string* operator(){
-		return pointer;
-	}*/
 	
 	std::string operator*() {
 		return *pointer;
@@ -18,7 +19,14 @@ public:
 	std::string* operator->() {
 		return pointer;
 	}	
+	
+	~StringPointer() {
+		if(_needsCleanup){
+			delete pointer;
+		}
+	}
 private:
+	bool _needsCleanup = false;
 	std::string *pointer;
 };
 
