@@ -20,5 +20,16 @@ int flags;
 }
 
 int main (int argc, char** argv) {
+	
+	int masterSocket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	sockaddr_in sockAddr;	
+	
+	sockAddr.sin_family = AF_INET;
+	sockAddr.sin_port = htons(12345);
+	sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	
+	bind(masterSocket, (sockaddr*) (&sockAddr), sizeof(sockAddr));
+	
+		
 	std::cout << "I'am chat client" << std::endl;
 }
