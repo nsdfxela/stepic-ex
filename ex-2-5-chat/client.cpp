@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <sys/epoll.h>
 
-int set_non_block (int fd){
+int set_nonblock (int fd){
 int flags; 
 #if defined (O_NONBLOCK)
 	if(-1==(flags=fcntl(fd, F_GETFL, 0))) {
@@ -20,16 +20,23 @@ int flags;
 }
 
 int main (int argc, char** argv) {
-	
+
 	int masterSocket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	sockaddr_in sockAddr;	
-	
+	sockaddr_in sockAddr;
+
 	sockAddr.sin_family = AF_INET;
 	sockAddr.sin_port = htons(12345);
 	sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	
+
 	bind(masterSocket, (sockaddr*) (&sockAddr), sizeof(sockAddr));
-	
-		
+	set_nonblock(masterSocket);
+	listen(masterSocket, SOMAXCONN);
+
+	int epoll = epoll_create1(0);
+	epoll_event event;
+	event.data.fd = masterSocket;
+	event.events = EPOLLIN;
+	epoll_ctl(epoll, EPOLL_CTL_ADD, masterSocket, &event);
 	std::cout << "I'am chat client" << std::endl;
+
 }
