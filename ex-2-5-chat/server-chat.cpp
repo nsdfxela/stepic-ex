@@ -5,8 +5,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
-#include <stdio.h>
-#include <arpa/inet.h>
 
 #define MAX_EVENTS 32
 
@@ -25,31 +23,17 @@ int flags;
 
 int main (int argc, char** argv) {
 
-	if(argc != 3) {
-		std::cout << "error! invalid arguments" << std::endl;
-		return -1;
-	}
+	std::cout << "I'am chat server" << std::endl;
 
-	std::cout << "I'am chat client" << std::endl;
-	std::cout << "server ip: " << argv[1] << " server port: " << argv[2] << std::endl;
 	int masterSocket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	sockaddr_in sockAddr;
 
 	sockAddr.sin_family = AF_INET;
 	sockAddr.sin_port = htons(12345);
-	inet_pton(AF_INET, "127.0.0.1", &(sockAddr.sin_addr));
+	sockAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	std::cout << "trying to connect..." << std::endl;
-	connect(masterSocket, (sockaddr*) (&sockAddr), sizeof(sockAddr));
-	std::cout << "connected" << std::endl;
-
-	std::string message;
-	while(true) {
-		std::cin >> message;
-		send(masterSocket, message.c_str(), message.size(), MSG_NOSIGNAL);
-	}
-/////////////////////////////////DEBUG
-	return 0;
+	bind(masterSocket, (sockaddr*) (&sockAddr), sizeof(sockAddr));
+	set_nonblock(masterSocket);
 	listen(masterSocket, SOMAXCONN);
 
 	int epoll = epoll_create1(0);
