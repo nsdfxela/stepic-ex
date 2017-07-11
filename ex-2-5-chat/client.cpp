@@ -46,6 +46,7 @@ int main (int argc, char** argv) {
 	std::string message;
 	while(true) {
 		std::cin >> message;
+		message = message + '\r' + '\n';
 		send(masterSocket, message.c_str(), message.size(), MSG_NOSIGNAL);
 	}
 /////////////////////////////////DEBUG

@@ -62,7 +62,7 @@ int main (int argc, char** argv) {
 				if(recvResult == 0 && errno != EAGAIN) {
 					shutdown(events[i].data.fd, SHUT_RDWR);
 					close(events[i].data.fd);
-				} else {
+				} else if(recvResult > 0) {
 					printf("%s", buffer);
 				}
 			}
