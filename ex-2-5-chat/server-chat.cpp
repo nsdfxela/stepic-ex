@@ -5,19 +5,21 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/epoll.h>
+#include <vector>
 
 #define MAX_EVENTS 32
 
-int set_nonblock (int fd){
+
+int set_nonblock(int fd)
+{
 int flags;
-#if defined (O_NONBLOCK)
-	if(-1==(flags=fcntl(fd, F_GETFL, 0))) {
+#if defined(O_NONBLOCK)
+ 	if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
 		flags = 0;
-	}
-	return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+	return  fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 #else
-	flags = 1;
-	return ioctl(fd, FIOBIO, &flags);
+	﻿flags = 1;
+	﻿return ioctl(fd, FIOBIO, &flags);
 #endif
 }
 
@@ -41,7 +43,7 @@ int main (int argc, char** argv) {
 	event.data.fd = masterSocket;
 	event.events = EPOLLIN;
 	epoll_ctl(epoll, EPOLL_CTL_ADD, masterSocket, &event);
-
+	std::vector<int> acceptedSockets;
 	while(true) {
 		epoll_event events[MAX_EVENTS];
 		int N = epoll_wait(epoll, events, MAX_EVENTS, -1);
@@ -50,7 +52,7 @@ int main (int argc, char** argv) {
 				int slaveSocket = accept(masterSocket, 0, 0);
 				set_nonblock(slaveSocket);
 				std::cout << "accept!" << std::endl;
-
+				acceptedSockets.push_back(slaveSocket);
 				epoll_event event;
 				event.data.fd = slaveSocket;
 				event.events = EPOLLIN;
@@ -64,6 +66,15 @@ int main (int argc, char** argv) {
 					close(events[i].data.fd);
 				} else if(recvResult > 0) {
 					printf("%s", buffer);
+					printf("Sockets known: %d \n", (int)acceptedSockets.size());
+					//retranslate message to other clients
+					for(int j = 0; j != acceptedSockets.size(); j++) {
+						if(acceptedSockets[i] != events[i].data.fd) {
+							std::cout << "sending to " << acceptedSockets[i] << std::endl;
+							send(acceptedSockets[i], buffer, recvResult, MSG_NOSIGNAL);
+						}
+						
+					}
 				}
 			}
 		}

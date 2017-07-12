@@ -43,15 +43,18 @@ int main (int argc, char** argv) {
 	connect(masterSocket, (sockaddr*) (&sockAddr), sizeof(sockAddr));
 	std::cout << "connected" << std::endl;
 
-	std::string message;
+	std::string outMessage;
+	char inMessage [1024];
 	while(true) {
-		std::cin >> message;
-		message = message + '\r' + '\n';
-		send(masterSocket, message.c_str(), message.size(), MSG_NOSIGNAL);
+		std::cin >> outMessage;
+		outMessage = outMessage + '\r' + '\n';
+		send(masterSocket, outMessage.c_str(), outMessage.size(), MSG_NOSIGNAL);
+		recv(masterSocket, inMessage, 1024, MSG_NOSIGNAL);
+		printf("message from: %s \n", inMessage);
 	}
 /////////////////////////////////DEBUG
 	return 0;
-	listen(masterSocket, SOMAXCONN);
+	/*listen(masterSocket, SOMAXCONN);
 
 	int epoll = epoll_create1(0);
 	epoll_event event;
@@ -84,6 +87,6 @@ int main (int argc, char** argv) {
 				}
 			}
 		}
-	}
+	}*/
 
 }
