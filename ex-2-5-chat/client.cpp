@@ -7,6 +7,7 @@
 #include <sys/epoll.h>
 #include <stdio.h>
 #include <arpa/inet.h>
+#include <thread>
 
 #define MAX_EVENTS 32
 
@@ -23,6 +24,32 @@ int flags;
 #endif
 }
 
+char inMessage [1024];
+int masterSocket;
+
+void doProcessInMsg () {
+
+	while(true) {
+	int recvResult = recv(masterSocket, inMessage, 1024, MSG_NOSIGNAL);
+		if(recvResult == 0 && errno != EAGAIN) {
+			shutdown(masterSocket, SHUT_RDWR);
+			close(masterSocket);
+			break;
+		} else if(recvResult > 0) {
+			printf("message : %s \n", inMessage);					
+		}
+	}
+}
+
+std::string getAddr(int socket) {
+	sockaddr_in saddr;
+	socklen_t saddrLen = sizeof(saddr);
+	getsockname(socket, (sockaddr*)(&saddr), &saddrLen);
+	char buffer [1024];
+	inet_ntop(AF_INET, &(saddr.sin_addr), buffer, 1024);
+	return std::string(buffer);
+}
+
 int main (int argc, char** argv) {
 
 	if(argc != 3) {
@@ -32,61 +59,27 @@ int main (int argc, char** argv) {
 
 	std::cout << "I'am chat client" << std::endl;
 	std::cout << "server ip: " << argv[1] << " server port: " << argv[2] << std::endl;
-	int masterSocket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	masterSocket = socket (AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	sockaddr_in sockAddr;
 
 	sockAddr.sin_family = AF_INET;
-	sockAddr.sin_port = htons(12345);
-	inet_pton(AF_INET, "127.0.0.1", &(sockAddr.sin_addr));
+	sockAddr.sin_port = htons(atoi(argv[2]));
+	inet_pton(AF_INET, argv[1], &(sockAddr.sin_addr));
 
 	std::cout << "trying to connect..." << std::endl;
 	connect(masterSocket, (sockaddr*) (&sockAddr), sizeof(sockAddr));
 	std::cout << "connected" << std::endl;
+	std::string ipAndPort = getAddr(masterSocket);
+	std::cout << "my ip is : " << ipAndPort << std::endl;	
+	std::thread inMsgProcessing (doProcessInMsg);
 
 	std::string outMessage;
-	char inMessage [1024];
+	
 	while(true) {
 		std::cin >> outMessage;
-		outMessage = outMessage + '\r' + '\n';
+		outMessage = ipAndPort + ": " + outMessage + '\r' + '\n';
 		send(masterSocket, outMessage.c_str(), outMessage.size(), MSG_NOSIGNAL);
-		recv(masterSocket, inMessage, 1024, MSG_NOSIGNAL);
-		printf("message from: %s \n", inMessage);
 	}
-/////////////////////////////////DEBUG
 	return 0;
-	/*listen(masterSocket, SOMAXCONN);
-
-	int epoll = epoll_create1(0);
-	epoll_event event;
-	event.data.fd = masterSocket;
-	event.events = EPOLLIN;
-	epoll_ctl(epoll, EPOLL_CTL_ADD, masterSocket, &event);
-
-	while(true) {
-		epoll_event events[MAX_EVENTS];
-		int N = epoll_wait(epoll, events, MAX_EVENTS, -1);
-		for(int i = 0; i != N; i++) {
-			if(events[i].data.fd == masterSocket){
-				int slaveSocket = accept(masterSocket, 0, 0);
-				set_nonblock(slaveSocket);
-				std::cout << "accept!" << std::endl;
-
-				epoll_event event;
-				event.data.fd = slaveSocket;
-				event.events = EPOLLIN;
-				epoll_ctl(epoll, EPOLL_CTL_ADD, slaveSocket, &event);
-
-			} else {
-				char buffer[1024];
-				int recvResult = recv(events[i].data.fd, buffer, 1024, MSG_NOSIGNAL);
-				if(recvResult == 0 && errno != EAGAIN) {
-					shutdown(events[i].data.fd, SHUT_RDWR);
-					close(events[i].data.fd);
-				} else {
-					printf("%s", buffer);
-				}
-			}
-		}
-	}*/
-
 }
+

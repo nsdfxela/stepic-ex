@@ -51,7 +51,7 @@ int main (int argc, char** argv) {
 			if(events[i].data.fd == masterSocket){
 				int slaveSocket = accept(masterSocket, 0, 0);
 				set_nonblock(slaveSocket);
-				std::cout << "accept!" << std::endl;
+				std::cout << "accept: " << slaveSocket << std::endl;
 				acceptedSockets.push_back(slaveSocket);
 				epoll_event event;
 				event.data.fd = slaveSocket;
@@ -64,14 +64,13 @@ int main (int argc, char** argv) {
 				if(recvResult == 0 && errno != EAGAIN) {
 					shutdown(events[i].data.fd, SHUT_RDWR);
 					close(events[i].data.fd);
-				} else if(recvResult > 0) {
-					printf("%s", buffer);
+				} else if(recvResult > 0) {					
 					printf("Sockets known: %d \n", (int)acceptedSockets.size());
 					//retranslate message to other clients
 					for(int j = 0; j != acceptedSockets.size(); j++) {
-						if(acceptedSockets[i] != events[i].data.fd) {
+						if(acceptedSockets[j] != events[i].data.fd) {						
 							std::cout << "sending to " << acceptedSockets[i] << std::endl;
-							send(acceptedSockets[i], buffer, recvResult, MSG_NOSIGNAL);
+							send(acceptedSockets[j], buffer, recvResult, MSG_NOSIGNAL);
 						}
 						
 					}
