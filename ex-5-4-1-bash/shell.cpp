@@ -1,5 +1,7 @@
 #include <sys/stat.h>
-#include <fcntl.h>   
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdio.h>
 
 void create_pipe() {
 	int pfd[2];
@@ -17,7 +19,7 @@ void create_pipe() {
 	else {
 		printf("fork1 \n");
 		pipe(pfd1);
-		if (!fork()) { // create unique   
+		if (!fork()) { // create unique
 			close(STDIN_FILENO);
 			close(STDOUT_FILENO);
 			dup2(pfd[0], STDIN_FILENO);
