@@ -18,10 +18,15 @@ void create_pipe() {
 		dup2(pfd[1], STDOUT_FILENO);
 		close(pfd[1]);
 		close(pfd[0]);
-		execlp("cat", "cat" "t1", NULL);
+		execlp("cat", "cat", "/home/nsdfxela/workspace/task1-20170604/ex-5-4-1-bash/t1", NULL);
 	}
 	else {
 		printf("fork1 \n");
+		close(STDIN_FILENO);
+		dup2(pfd[0], STDIN_FILENO);
+		close(pfd[1]);
+		close(pfd[0]);
+		execlp("grep", "grep", "2015", NULL);
 		pipe(pfd1);
 		if (!fork()) { // create unique
 			close(STDIN_FILENO);
