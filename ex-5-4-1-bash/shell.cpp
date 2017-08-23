@@ -10,23 +10,73 @@ class cmd {
 public:
 	std::string command;
 	char **params = NULL;
-cmd () {
-}
-
-~cmd() {	
-		printf("dtor command \n");
-	}	
+cmd () { }
+~cmd() { }	
 };
+
 
 // cat t1 | grep 2015 | sort
 void create_pipe(std::vector <cmd> &commands) {
-	int pfd[2];
+	int pfds [commands.size()][2];
+	int file = open("./res.out", O_WRONLY | O_CREAT, 0666);
+	
+	int *n_pfd_1  = pfds[0];
+	int *n_pfd_2  = pfds[1];
+	
+	for(int i = 0; i < commands.size(); i++) {
+	
+	
+	pipe(n_pfd_1);
+	printf("cycle %d \n", i);
+		if(!fork()) {			
+			if(!i) {
+				printf("thread 0 \n");	
+				close(STDOUT_FILENO);
+				dup2(n_pfd_1[1], STDOUT_FILENO);
+				close(n_pfd_1[0]);				
+				close(n_pfd_1[1]);
+				execvp(commands[i].command.c_str(), commands[i].params);
+			} else {
+				bool last = (i == (commands.size() - 1) );
+				printf("thread %d \n", i+1);	
+			
+				close(STDIN_FILENO);
+				close(STDOUT_FILENO);
+			
+				dup2(n_pfd_1[0], STDIN_FILENO);			
+				dup2( last ? file : n_pfd_2[1], STDOUT_FILENO);
+				close(n_pfd_1[1]);
+				close(n_pfd_1[0]);
+				close(n_pfd_2[0]);
+				close(n_pfd_2[1]);
+				if(last) {
+					close(file); 
+				} else { 
+					pipe(n_pfd_2); 
+					n_pfd_1 = pfds[i];
+					n_pfd_2 = pfds[i + 1];
+				}
+				execvp(commands[i].command.c_str(), commands[i].params);						
+			}
+		} else {
+			printf("thread %d breaking \n", i);	
+			/*close(STDOUT_FILENO);
+			dup2(n_pfd_1[1], STDOUT_FILENO);
+			close(n_pfd_1[1]);
+			close(n_pfd_1[0]);
+			execvp(commands[i].command.c_str(), commands[i].params);*/						
+			break;
+		}
+	}
+	
+
+	/*int pfd[2];
 	int pfd1[2];
 	int pfd2[2];
 	//int file = open("/home/box/res.out", O_WRONLY | O_CREAT, 0666);
-	int file = open("./res.out", O_WRONLY | O_CREAT, 0666);
+	
 	pipe(pfd);
-	printf("cmd: %s param: %s \n", commands[0].command.c_str(), commands[0].params[0]);
+	//printf("cmd: %s param: %s \n", commands[0].command.c_str(), commands[0].params[0]);
 	if (!fork()) {
 		close(STDOUT_FILENO);
 		dup2(pfd[1], STDOUT_FILENO);
@@ -35,8 +85,7 @@ void create_pipe(std::vector <cmd> &commands) {
 		
 		//execlp("cat", "cat", "/home/nsdfxela/workspace/task1-20170604/ex-5-4-1-bash/t1", NULL);
 		execvp(commands[0].command.c_str(), commands[0].params);
-	}
-	else {
+	} else {
 		printf("fork1 \n");
 		close(STDIN_FILENO);
 		dup2(pfd[0], STDIN_FILENO);
@@ -54,8 +103,7 @@ void create_pipe(std::vector <cmd> &commands) {
 			close(pfd1[0]);
 			close(pfd1[1]);
 			execlp("grep", "grep", "2015", NULL);
-		}
-		else {
+		} else {
 			printf("fork2 \n");
 			pipe(pfd2);
 			if (!fork()) {
@@ -81,7 +129,7 @@ void create_pipe(std::vector <cmd> &commands) {
 				execlp("sort", "sort", NULL);
 			}
 		}
-	}
+	}*/
 	//delete [] commands[0].params;
 }
 
@@ -96,20 +144,20 @@ void parse_cmd(std::vector <cmd> &pipe) {
 	cmd1.params[1] = new char[3];
 	strcpy(cmd1.params[1], "t1\0");	
 	pipe.push_back(cmd1);
-	printf("pipe created: %s \n", cmd1.params[1]);	
-	/*cmd2.command = "grep";
+	//printf("pipe created: %s \n", cmd1.params[1]);	
+	cmd2.command = "grep";
 	cmd2.params = new char *[2];
 	cmd2.params[0] = new char[5];
-	strcpy(cmd2.params[0], "grep");
+	strcpy(cmd2.params[0], "grep\0");
 	cmd2.params[1] = new char[5];
-	strcpy(cmd2.params[1], "2015");	
+	strcpy(cmd2.params[1], "2015\0");	
 	pipe.push_back(cmd2);
 	
 	cmd3.command = "sort";
 	cmd3.params = new char *[1];
 	cmd3.params[0] = new char[5];
-	strcpy(cmd3.params[0], "sort");		
-	pipe.push_back(cmd3);*/
+	strcpy(cmd3.params[0], "sort\0");		
+	pipe.push_back(cmd3);
 	
 	/*pipe.push_back("grep 2015");
 	pipe.push_back("sort");*/
